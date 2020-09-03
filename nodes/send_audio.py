@@ -56,8 +56,8 @@ class AudioMessage(object):
                     device = devices_list.index(desired_device_name)
                     print("Using device: " +str(device)+" == "+desired_device_name)
                 else:
-                    print("Astra is default input device: " +str(device)+" == "+desired_device_name)
                     device = devices_list.index('default')
+                    print("Astra is default input device: " +str(device)+" == "+desired_device_name)
 
                 if device == -1:
                     print("Unable to find default device. Here are the available audio devices: ")
