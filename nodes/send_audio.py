@@ -42,9 +42,33 @@ class AudioMessage(object):
                 stream = open(rospy.get_param(self._input), 'rb')
                 rate = rospy.Rate(5) # 10hz
             else:
-                # Initializing pyaudio for input from system microhpone
-                stream = pyaudio.PyAudio().open(format=pyaudio.paInt16, channels=1,
-                                                rate=16000, input=True, frames_per_buffer=1024)
+                p = pyaudio.PyAudio()
+                info = p.get_host_api_info_by_index(0)
+                numDevices = info.get('deviceCount')
+                device = -1
+                devices_list = []
+                desired_device_name = 'ASTRA: USB Audio (hw:1,0)'
+
+                for i in range(0, numDevices):
+                    devices_list.append(p.get_device_info_by_host_api_device_index(0, i).get('name'))
+
+                if desired_device_name in devices_list:
+                    device = devices_list.index(desired_device_name)
+                    print("Using device: " +str(device)+" == "+desired_device_name)
+                else:
+                    print("Astra is default input device: " +str(device)+" == "+desired_device_name)
+                    device = devices_list.index('default')
+
+                if device == -1:
+                    print("Unable to find default device. Here are the available audio devices: ")
+                    for i in range(0, numDevices):
+                        if (p.get_device_info_by_host_api_device_index(0, i).get('maxInputChannels')) > 0:
+                            print ("Input Device id ", i, " - ", p.get_device_info_by_host_api_device_index(0, i).get('name'))
+                    sys.exit(1)
+
+                stream = p.open(format=pyaudio.paInt16, channels=1,
+                                                rate=16000, input=True, frames_per_buffer=1024, input_device_index=device)
+            
                 stream.start_stream()
         else:
             rospy.logerr("No input means provided. Please use the launch file instead")
